@@ -70,6 +70,9 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KogitoRuntimeClientImpl.class);
 
+    @ConfigProperty(name = "kogito.dataindex.context-path.url")
+    protected Optional<String> contextPathUrl;
+    
     @Override
     public CompletableFuture<String> abortProcessInstance(String serviceURL, ProcessInstance processInstance) {
         String requestURI = format(ABORT_PROCESS_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId());
@@ -221,7 +224,7 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     protected CompletableFuture sendPostWithBodyClientRequest(WebClient webClient, String requestURI, String logMessage, String body, String contentType) {
         CompletableFuture future = new CompletableFuture<>();
 
-        HttpRequest<Buffer> request = webClient.post(requestURI)
+        HttpRequest<Buffer> request = webClient.post(String.format("%s/%s", contextPathUrl, requestURI))
                 .putHeader("Authorization", getAuthHeader())
                 .putHeader("Content-Type", contentType);
         if (MediaType.APPLICATION_JSON.equals(contentType)) {
@@ -236,7 +239,7 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
 
     protected CompletableFuture sendPostClientRequest(WebClient webClient, String requestURI, String logMessage) {
         CompletableFuture future = new CompletableFuture<>();
-        webClient.post(requestURI)
+        webClient.post(String.format("%s/%s", contextPathUrl, requestURI))
                 .putHeader("Authorization", getAuthHeader())
                 .send(res -> asyncHttpResponseTreatment(res, future, logMessage));
         LOGGER.debug("Sending post to URI {}", requestURI);
@@ -249,7 +252,7 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
 
     protected CompletableFuture sendPutClientRequest(WebClient webClient, String requestURI, String logMessage, String body, String contentType) {
         CompletableFuture future = new CompletableFuture<>();
-        HttpRequest<Buffer> request = webClient.put(requestURI)
+        HttpRequest<Buffer> request = webClient.put(String.format("%s/%s", contextPathUrl, requestURI))
                 .putHeader("Authorization", getAuthHeader())
                 .putHeader("Content-Type", contentType);
         if (MediaType.APPLICATION_JSON.equals(contentType)) {
@@ -265,7 +268,7 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     protected CompletableFuture sendGetClientRequest(WebClient webClient, String requestURI, String logMessage, Class type) {
         CompletableFuture future = new CompletableFuture<>();
 
-        webClient.get(requestURI)
+        webClient.get(String.format("%s/%s", contextPathUrl, requestURI))
                 .putHeader("Authorization", getAuthHeader())
                 .send(res -> send(logMessage, type, future, res));
         LOGGER.debug("Sending GET to URI {}", requestURI);
